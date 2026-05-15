@@ -17,6 +17,7 @@ var (
 	last_working_directory = getUserHomeDir()
 	history_absolute_path = getUserHomeDir() + "/.gosh_history"
 	command_index = 0
+	buf_position = 0
 ) 
 
 func main() {
@@ -80,6 +81,10 @@ func getWorkingDirectory() string {
 func handleInput(input string, history_file *os.File) error {
 	input = strings.TrimSpace(input)
         
+	if input == "" {
+		return nil
+	}
+
 	_, err := history_file.WriteString(input + "\n")
 	if err != nil {
 		log.Fatal("Could not write on history file.")
@@ -111,9 +116,6 @@ func handleInput(input string, history_file *os.File) error {
 
 	case "exit":
 		os.Exit(0)
-
-	case "":
-		return nil
 	}
 
 	cmd := exec.Command(args[0], args[1:]...)
@@ -135,26 +137,48 @@ func readInput() (string, error) {
 		switch key.Code {
 			case keys.CtrlC, keys.CtrlD:
 				inputErr = io.EOF
+				buf_position = 0
 				return true, nil
 
 			case keys.Enter:
 				fmt.Print("\r\n")
 				result = string(buf) + "\n"
+				buf_position = 0
 				return true, nil
 
 			case keys.Backspace:
-				if len(buf) > 0 {
+				if len(buf) > 0  || buf_position > 0 {
 					buf = buf[:len(buf)-1]
 					fmt.Printf("\b \b")
+					buf_position--
 				}
 
-			case keys.Space:
-				buf = append(buf, key.Runes[0])
-				fmt.Print(string(key.Runes[0]))
+			case keys.Right:
+				if buf_position <= len(buf) {
+					fmt.Printf("\033[%dC", 1)
+					buf_position++
+				}
+
+			case keys.Left:
+				if len(buf) > 0 || buf_position > 0 {
+					fmt.Printf("\033[%dD", 1)
+					buf_position--
+				}
+
+			case keys.Up:
+				data, err := os.ReadFile(history_absolute_path)
+				if err != nil {
+					log.Fatal("Could not read from the history file")		
+					return  true, nil
+				}
+
+				fmt.Println(string(data[:]))
+
 			default:
-				if key.Code == keys.RuneKey {
+				if key.Code == keys.RuneKey || key.Code == keys.Space {
 					buf = append(buf, key.Runes[0])
 					fmt.Print(string(key.Runes[0]))
+					buf_position++
 				}
 		}
 
