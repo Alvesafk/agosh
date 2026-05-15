@@ -87,20 +87,13 @@ func handleInput(input string, history_file *os.File) error {
 	args := strings.Split(input, " ")
 
 	if len(args) >= 2 {
-		if strings.Contains(args[1], "~") {
-			args[1] = strings.Replace(args[1], "~", getUserHomeDir(), 1)
-		}
+		args[1] = strings.Replace(args[1], "~", getUserHomeDir(), 1)
 	}
 
 	switch args[0] {
 	case "cd":
 
 		if len(args) < 2 {
-			last_working_directory = getWorkingDirectory()
-			return os.Chdir(getUserHomeDir())
-		}
-
-		if args[1] == "~" {
 			last_working_directory = getWorkingDirectory()
 			return os.Chdir(getUserHomeDir())
 		}
