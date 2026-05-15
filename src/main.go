@@ -30,11 +30,7 @@ func main() {
 
 	defer history_file.Close()
 
-	u, err := user.Current()
-	if err != nil {
-		log.Fatal("User not found!")
-		return
-	}
+	u := getUser()
 
 	for {
 		wd := getWorkingDirectory()
@@ -76,6 +72,29 @@ func getWorkingDirectory() string {
 	}
 
 	return wd
+}
+
+func getUser() *user.User {
+	u, err := user.Current()
+	if err != nil {
+		log.Fatal("User not found!")
+		return nil
+	}
+
+	return u
+}
+
+func clearStdin() {
+	fmt.Print("\r\033[K$ ")
+}
+
+func reverseStringArray(input []string) []string {
+	result := input
+	for i, s := 0, len(input) -1; i < s; i, s = i+1, s-1 {
+		result[i], result[s] = result[s], result[i]
+	}
+
+	return result
 }
 
 func handleInput(input string, history_file *os.File) error {
@@ -133,6 +152,14 @@ func readInput() (string, error) {
 		inputErr error
 	)
 
+	data_raw, err := os.ReadFile(history_absolute_path)
+	if err != nil {
+		log.Fatal("Could not read from the history file")		
+		return "", err
+	}
+
+	data := reverseStringArray(strings.Split(string(data_raw), "\n"))
+
 	keyboard.Listen(func(key keys.Key) (stop bool, err error) {
 		switch key.Code {
 			case keys.CtrlC, keys.CtrlD:
@@ -166,14 +193,19 @@ func readInput() (string, error) {
 				}
 
 			case keys.Up:
-				data, err := os.ReadFile(history_absolute_path)
-				if err != nil {
-					log.Fatal("Could not read from the history file")		
-					return  true, nil
+				clearStdin()
+				command_index++
+				buf = []rune(data[command_index])
+				fmt.Print(data[command_index])
+
+			case keys.Down:
+				clearStdin()
+				if command_index > 0 {
+					command_index-- 
+					buf = []rune(data[command_index])
+					fmt.Print(data[command_index])
 				}
-
-				fmt.Println(string(data[:]))
-
+				
 			default:
 				if key.Code == keys.RuneKey || key.Code == keys.Space {
 					buf = append(buf, key.Runes[0])
