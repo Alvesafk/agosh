@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 )
 
@@ -58,11 +59,15 @@ func handleInput(input string) error {
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	
-	user := "afk"
+
+	u, err := user.Current()
+	if err != nil {
+		fmt.Println("Error: user not found!")
+		return
+	}
 
 	for {
-		fmt.Printf("%s on ionknow\n$ ", user)
+		fmt.Printf("%s on ionknow\n$ ", u.Username)
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
