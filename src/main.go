@@ -1,13 +1,16 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"strings"
+
+	"atomicgo.dev/keyboard"
+	"atomicgo.dev/keyboard/keys"
 )
 
 var (
@@ -17,7 +20,6 @@ var (
 ) 
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
 
 	history_file, err := os.OpenFile(history_absolute_path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -37,7 +39,7 @@ func main() {
 		wd := getWorkingDirectory()
 		fmt.Printf("%s on %s\n$ ", u.Username, wd)
 
-		input, err := reader.ReadString('\n')
+		input, err := readInput()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
@@ -120,4 +122,44 @@ func handleInput(input string, history_file *os.File) error {
 	cmd.Stdout = os.Stdout
 
 	return cmd.Run()
+}
+
+func readInput() (string, error) {
+	var (
+		buf []rune
+		result string
+		inputErr error
+	)
+
+	keyboard.Listen(func(key keys.Key) (stop bool, err error) {
+		switch key.Code {
+			case keys.CtrlC, keys.CtrlD:
+				inputErr = io.EOF
+				return true, nil
+
+			case keys.Enter:
+				fmt.Print("\r\n")
+				result = string(buf) + "\n"
+				return true, nil
+
+			case keys.Backspace:
+				if len(buf) > 0 {
+					buf = buf[:len(buf)-1]
+					fmt.Printf("\b \b")
+				}
+
+			case keys.Space:
+				buf = append(buf, key.Runes[0])
+				fmt.Print(string(key.Runes[0]))
+			default:
+				if key.Code == keys.RuneKey {
+					buf = append(buf, key.Runes[0])
+					fmt.Print(string(key.Runes[0]))
+				}
+		}
+
+		return false, nil
+	})
+
+	return result, inputErr
 }
