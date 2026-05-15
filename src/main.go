@@ -15,10 +15,10 @@ import (
 
 var (
 	last_working_directory = getUserHomeDir()
-	history_absolute_path = getUserHomeDir() + "/.gosh_history"
-	command_index = 0
-	buf_position = 0
-) 
+	history_absolute_path  = getUserHomeDir() + "/.gosh_history"
+	command_index          = 0
+	buf_position           = 0
+)
 
 func main() {
 
@@ -90,7 +90,7 @@ func clearStdin() {
 
 func reverseStringArray(input []string) []string {
 	result := input
-	for i, s := 0, len(input) -1; i < s; i, s = i+1, s-1 {
+	for i, s := 0, len(input)-1; i < s; i, s = i+1, s-1 {
 		result[i], result[s] = result[s], result[i]
 	}
 
@@ -99,7 +99,7 @@ func reverseStringArray(input []string) []string {
 
 func handleInput(input string, history_file *os.File) error {
 	input = strings.TrimSpace(input)
-        
+
 	if input == "" {
 		return nil
 	}
@@ -135,6 +135,10 @@ func handleInput(input string, history_file *os.File) error {
 
 	case "exit":
 		os.Exit(0)
+
+	case "getHost", "gethost":
+		fmt.Printf("%s\n", getHostName())
+		return nil
 	}
 
 	cmd := exec.Command(args[0], args[1:]...)
@@ -147,14 +151,14 @@ func handleInput(input string, history_file *os.File) error {
 
 func readInput() (string, error) {
 	var (
-		buf []rune
-		result string
+		buf      []rune
+		result   string
 		inputErr error
 	)
 
 	data_raw, err := os.ReadFile(history_absolute_path)
 	if err != nil {
-		log.Fatal("Could not read from the history file")		
+		log.Fatal("Could not read from the history file")
 		return "", err
 	}
 
@@ -162,56 +166,56 @@ func readInput() (string, error) {
 
 	keyboard.Listen(func(key keys.Key) (stop bool, err error) {
 		switch key.Code {
-			case keys.CtrlC, keys.CtrlD:
-				inputErr = io.EOF
-				buf_position = 0
-				return true, nil
+		case keys.CtrlC, keys.CtrlD:
+			inputErr = io.EOF
+			buf_position = 0
+			return true, nil
 
-			case keys.Enter:
-				fmt.Print("\r\n")
-				result = string(buf) + "\n"
-				buf_position = 0
-				return true, nil
+		case keys.Enter:
+			fmt.Print("\r\n")
+			result = string(buf) + "\n"
+			buf_position = 0
+			return true, nil
 
-			case keys.Backspace:
-				if len(buf) > 0  || buf_position > 0 {
-					buf = buf[:len(buf)-1]
-					fmt.Printf("\b \b")
-					buf_position--
-				}
+		case keys.Backspace:
+			if len(buf) > 0 || buf_position > 0 {
+				buf = buf[:len(buf)-1]
+				fmt.Printf("\b \b")
+				buf_position--
+			}
 
-			case keys.Right:
-				if buf_position <= len(buf) {
-					fmt.Printf("\033[%dC", 1)
-					buf_position++
-				}
+		case keys.Right:
+			if buf_position <= len(buf) {
+				fmt.Printf("\033[%dC", 1)
+				buf_position++
+			}
 
-			case keys.Left:
-				if len(buf) > 0 || buf_position > 0 {
-					fmt.Printf("\033[%dD", 1)
-					buf_position--
-				}
+		case keys.Left:
+			if len(buf) > 0 || buf_position > 0 {
+				fmt.Printf("\033[%dD", 1)
+				buf_position--
+			}
 
-			case keys.Up:
-				clearStdin()
-				command_index++
+		case keys.Up:
+			clearStdin()
+			command_index++
+			buf = []rune(data[command_index])
+			fmt.Print(data[command_index])
+
+		case keys.Down:
+			clearStdin()
+			if command_index > 0 {
+				command_index--
 				buf = []rune(data[command_index])
 				fmt.Print(data[command_index])
+			}
 
-			case keys.Down:
-				clearStdin()
-				if command_index > 0 {
-					command_index-- 
-					buf = []rune(data[command_index])
-					fmt.Print(data[command_index])
-				}
-				
-			default:
-				if key.Code == keys.RuneKey || key.Code == keys.Space {
-					buf = append(buf, key.Runes[0])
-					fmt.Print(string(key.Runes[0]))
-					buf_position++
-				}
+		default:
+			if key.Code == keys.RuneKey || key.Code == keys.Space {
+				buf = append(buf, key.Runes[0])
+				fmt.Print(string(key.Runes[0]))
+				buf_position++
+			}
 		}
 
 		return false, nil
