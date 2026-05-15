@@ -47,14 +47,17 @@ func handleInput(input string) error {
 	case "cd":
 
 		if len(args) < 2 {
+			last_working_directory = getWorkingDirectory()
 			return os.Chdir(getUserHomeDir())
 		}
 
 		if args[1] == "~" {
+			last_working_directory = getWorkingDirectory()
 			return os.Chdir(getUserHomeDir())
 		}
 
 		if args[1] == "-" {
+			fmt.Println(last_working_directory)
 			return os.Chdir(last_working_directory)
 		}
 
