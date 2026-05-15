@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -28,25 +27,37 @@ func getHostName() string {
 	return hostname
 }
 
+func getWorkingDirectory() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	return wd
+}
+
 func handleInput(input string) error {
-	input = strings.TrimSuffix(input, "\n")
+	input = strings.TrimSpace(input)
 
 	args := strings.Split(input, " ")
 
 	switch args[0] {
 	case "cd":
-		if args[1] == "~" {
+		if len(args) < 2 {
 			return os.Chdir(getUserHomeDir())
 		}
 
-		if len(args) < 2 {
-			return errors.New("Path is required!")
+		if args[1] == "~" {
+			return os.Chdir(getUserHomeDir())
 		}
 
 		return os.Chdir(args[1])
 
 	case "exit":
 		os.Exit(0)
+	
+	case "":
+		return nil
 	}
 
 	cmd := exec.Command(args[0], args[1:]...)
@@ -67,7 +78,8 @@ func main() {
 	}
 
 	for {
-		fmt.Printf("%s on ionknow\n$ ", u.Username)
+		wd := getWorkingDirectory()
+		fmt.Printf("%s on %s\n$ ", u.Username, wd)
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
