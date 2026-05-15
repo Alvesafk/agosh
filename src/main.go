@@ -3,13 +3,49 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"strings"
 )
 
-var last_working_directory = getUserHomeDir()
+var (
+	last_working_directory = getUserHomeDir()
+	history_absolute_path = getUserHomeDir() + "/.gosh_history"
+) 
+
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+
+	history_file, err := os.OpenFile(history_absolute_path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal("Could not open gosh history file.")
+		return
+	}
+
+	defer history_file.Close()
+
+	u, err := user.Current()
+	if err != nil {
+		log.Fatal("User not found!")
+		return
+	}
+
+	for {
+		wd := getWorkingDirectory()
+		fmt.Printf("%s on %s\n$ ", u.Username, wd)
+
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
+		if err = handleInput(input, history_file); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}
+}
 
 func getUserHomeDir() string {
 	home_dir, err := os.UserHomeDir()
@@ -38,8 +74,14 @@ func getWorkingDirectory() string {
 	return wd
 }
 
-func handleInput(input string) error {
+func handleInput(input string, history_file *os.File) error {
 	input = strings.TrimSpace(input)
+        
+	_, err := history_file.WriteString(input + "\n")
+	if err != nil {
+		log.Fatal("Could not write on history file.")
+		return nil
+	}
 
 	args := strings.Split(input, " ")
 
@@ -78,28 +120,4 @@ func handleInput(input string) error {
 	cmd.Stdout = os.Stdout
 
 	return cmd.Run()
-}
-
-func main() {
-	reader := bufio.NewReader(os.Stdin)
-
-	u, err := user.Current()
-	if err != nil {
-		fmt.Println("Error: user not found!")
-		return
-	}
-
-	for {
-		wd := getWorkingDirectory()
-		fmt.Printf("%s on %s\n$ ", u.Username, wd)
-
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-
-		if err = handleInput(input); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-	}
 }
