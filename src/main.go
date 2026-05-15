@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var last_working_directory = getUserHomeDir()
+
 func getUserHomeDir() string {
 	home_dir, err := os.UserHomeDir()
 	if err != nil {
@@ -43,6 +45,7 @@ func handleInput(input string) error {
 
 	switch args[0] {
 	case "cd":
+
 		if len(args) < 2 {
 			return os.Chdir(getUserHomeDir())
 		}
@@ -51,11 +54,17 @@ func handleInput(input string) error {
 			return os.Chdir(getUserHomeDir())
 		}
 
+		if args[1] == "-" {
+			return os.Chdir(last_working_directory)
+		}
+
+		last_working_directory = getWorkingDirectory()
+
 		return os.Chdir(args[1])
 
 	case "exit":
 		os.Exit(0)
-	
+
 	case "":
 		return nil
 	}
