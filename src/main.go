@@ -126,7 +126,9 @@ func handleInput(input string, history_file *os.File) error {
 
 		if args[1] == "-" {
 			fmt.Println(last_working_directory)
-			return os.Chdir(last_working_directory)
+			wd_to_go := last_working_directory
+			last_working_directory = getWorkingDirectory()
+			return os.Chdir(wd_to_go)
 		}
 
 		last_working_directory = getWorkingDirectory()
