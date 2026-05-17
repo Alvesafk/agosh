@@ -13,6 +13,10 @@ import (
 	"atomicgo.dev/keyboard/keys"
 )
 
+const (
+	BASE_WD_DEPTH = 2
+)
+
 var (
 	last_working_directory = getUserHomeDir()
 	history_absolute_path  = getUserHomeDir() + "/.gosh_history"
@@ -33,7 +37,7 @@ func main() {
 	u := getUser()
 
 	for {
-		wd := getWorkingDirectory()
+		wd := getFormattedWorkingDirectory(BASE_WD_DEPTH)
 		fmt.Printf("%s on %s\n$ ", u.Username, wd)
 
 		input, err := readInput()
@@ -82,6 +86,23 @@ func getUser() *user.User {
 	}
 
 	return u
+}
+
+func getFormattedWorkingDirectory(depth int) string {
+	wd_array := reverseStringArray([]string{getWorkingDirectory()})
+	wd_formatted := strings.Split(wd_array[0], "/")
+
+	if depth < 1 || len(wd_formatted) <= 2 {
+		return getWorkingDirectory()
+	}
+
+	var result string
+
+	for i := depth; i > 0; i-- {
+		result += wd_formatted[len(wd_formatted)-i] + "/"
+	}
+
+	return result
 }
 
 func clearStdin() {
