@@ -133,8 +133,10 @@ func handleInput(input string, history_file *os.File) error {
 
 	args := strings.Split(input, " ")
 
-	if len(args) >= 2 {
-		args[1] = strings.Replace(args[1], "~", getUserHomeDir(), 1)
+	if len(args) > 1 {
+		for i, _ := range args {
+			args[i] = strings.Replace(args[i], "~", getUserHomeDir(), 1)
+		}
 	}
 
 	switch args[0] {
