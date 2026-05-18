@@ -11,16 +11,13 @@ import (
 
 	"atomicgo.dev/keyboard"
 	"atomicgo.dev/keyboard/keys"
+
+	"github.com/Alvesafk/agosh/src/config"
 )
 
 const (
 	BASE_WD_DEPTH = 2
-)
-
-const (
-	RESET_COLOR = "\033[0m"
-	CYAN_COLOR  = "\033[36m"
-	GREEN_COLOR = "\033[32m"
+	RESET_COLOR   = "\033[0m"
 )
 
 var (
@@ -28,6 +25,7 @@ var (
 	history_absolute_path  = getUserHomeDir() + "/.gosh_history"
 	command_index          = 0
 	buf_position           = 0
+	user_config            = config.GetUserConfig()
 )
 
 func main() {
@@ -44,7 +42,7 @@ func main() {
 
 	for {
 		wd := getFormattedWorkingDirectory(BASE_WD_DEPTH)
-		fmt.Printf("%v%s%v on %v%s%v\n$ ", CYAN_COLOR, u.Username, RESET_COLOR, GREEN_COLOR, wd, RESET_COLOR)
+		fmt.Printf("%v%s%v on %v%s%v\n$ ", user_config.First_Color, u.Username, RESET_COLOR, user_config.Second_Color, wd, RESET_COLOR)
 
 		input, err := readInput()
 		if err != nil {
