@@ -17,6 +17,12 @@ const (
 	BASE_WD_DEPTH = 2
 )
 
+const (
+	RESET_COLOR = "\033[0m"
+	CYAN_COLOR  = "\033[36m"
+	GREEN_COLOR = "\033[32m"
+)
+
 var (
 	last_working_directory = getUserHomeDir()
 	history_absolute_path  = getUserHomeDir() + "/.gosh_history"
@@ -38,7 +44,7 @@ func main() {
 
 	for {
 		wd := getFormattedWorkingDirectory(BASE_WD_DEPTH)
-		fmt.Printf("%s on %s\n$ ", u.Username, wd)
+		fmt.Printf("%v%s%v on %v%s%v\n$ ", CYAN_COLOR, u.Username, RESET_COLOR, GREEN_COLOR, wd, RESET_COLOR)
 
 		input, err := readInput()
 		if err != nil {
@@ -134,7 +140,7 @@ func handleInput(input string, history_file *os.File) error {
 	args := strings.Split(input, " ")
 
 	if len(args) > 1 {
-		for i, _ := range args {
+		for i := range args {
 			args[i] = strings.Replace(args[i], "~", getUserHomeDir(), 1)
 		}
 	}
