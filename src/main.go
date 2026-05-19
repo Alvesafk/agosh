@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	BASE_WD_DEPTH = 2
-	RESET_COLOR   = "\033[0m"
+	RESET_COLOR = "\033[0m"
 )
 
 var (
@@ -41,7 +40,7 @@ func main() {
 	u := getUser()
 
 	for {
-		wd := getFormattedWorkingDirectory(BASE_WD_DEPTH)
+		wd := getFormattedWorkingDirectory(user_config.Base_Wd_Depth)
 		fmt.Printf("%v%s%v on %v%s%v\n$ ", user_config.First_Color, u.Username, RESET_COLOR, user_config.Second_Color, wd, RESET_COLOR)
 
 		input, err := readInput()
