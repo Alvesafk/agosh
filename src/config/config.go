@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -17,12 +18,16 @@ const (
 )
 
 var (
-	config_absolute_path = getUserHomeDir() + ".agoshconfig"
+	config_absolute_path = getUserHomeDir() + "/.agoshconfig"
 )
 
 type User_Config struct {
 	First_Color, Second_Color string
 	Base_Wd_Depth             int
+}
+
+func Test() {
+	parseConfig()
 }
 
 func GetUserConfig() User_Config {
@@ -33,20 +38,25 @@ func GetUserConfig() User_Config {
 	}
 }
 
-func getConfigFile() *os.File{
-	config_file, err := os.OpenFile(config_absolute_path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+func getDataConfig() []byte {
+	data_config, err := os.ReadFile(config_absolute_path)
 	if err != nil {
-		log.Fatal("Could not open gosh history file.")
-		return nil
+		log.Print("Could not find from the config file, creating the file.")
+
+		err := os.WriteFile(config_absolute_path, []byte("// agosh config file"), 0644)
+		if err != nil {
+			log.Print("Error during creation, trying again.")
+		}
 	}
 
-	return config_file
+	return data_config
 }
 
 func parseConfig() {
-	config_file := getConfigFile()
+	data_config := getDataConfig()
 
-	defer config_file.Close()
+	fmt.Println(string(data_config))
+	fmt.Printf("%T\n", data_config)
 }
 
 func getUserHomeDir() string {
